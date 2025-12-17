@@ -266,7 +266,7 @@ class LightspeedAPI
      * @param array $options Query parameters
      * @return object API response with data array
      */
-    public function getPricebooks(array $options = []): object
+    public function getPriceBookProducts(array $options = []): object
     {
         $path = $this->buildQueryString($options);
         return $this->requestApi('/api/2.0/price_book_products' . $path);
