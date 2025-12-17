@@ -105,8 +105,11 @@ $refreshToken = $newTokens['refresh_token'];
 ### Products
 
 ```php
-// Get all products (API 3.0)
+// Get all products (API 2.0)
 $products = $api->getProducts(['page_size' => 50]);
+
+// Get all products (API 3.0 BETA - for future migration)
+$products = $api->getProducts30(['page_size' => 50]);
 
 // Get single product
 $product = $api->getProduct('product-uuid');

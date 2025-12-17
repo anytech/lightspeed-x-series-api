@@ -52,11 +52,11 @@ class LightspeedAPI
     }
 
     // ========================================================================
-    // PRODUCTS (API 3.0 / 2.0)
+    // PRODUCTS (API 2.0 / 2.1)
     // ========================================================================
 
     /**
-     * Get all products (API 3.0)
+     * Get all products (API 2.0)
      *
      * @param array $options Query parameters
      * @return object API response with data array
@@ -64,18 +64,30 @@ class LightspeedAPI
     public function getProducts(array $options = []): object
     {
         $path = $this->buildQueryString($options);
+        return $this->requestApi('/api/2.0/products' . $path);
+    }
+
+    /**
+     * Get all products using API 3.0 (BETA - for future migration)
+     *
+     * @param array $options Query parameters
+     * @return object API response with data array
+     */
+    public function getProducts30(array $options = []): object
+    {
+        $path = $this->buildQueryString($options);
         return $this->requestApi('/api/3.0/products' . $path);
     }
 
     /**
-     * Get a single product by ID (API 3.0)
+     * Get a single product by ID (API 2.0)
      *
      * @param string $id Product UUID
      * @return object API response with product data
      */
     public function getProduct(string $id): object
     {
-        return $this->requestApi('/api/3.0/products/' . $id);
+        return $this->requestApi('/api/2.0/products/' . $id);
     }
 
     /**
