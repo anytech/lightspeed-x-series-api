@@ -2,6 +2,8 @@
 
 A PHP client for the Lightspeed X-Series (formerly Vend) API with built-in OAuth2 support.
 
+**Updated for Lightspeed's new date-based API versioning (January 2026+)**
+
 ## Requirements
 
 - PHP 8.0+
@@ -35,14 +37,14 @@ foreach ($products->data as $product) {
 $product = $api->apiRequest('products/abc-123-uuid', 'get');
 
 // Create a customer
-$customer = $api->apiRequest('customers', 'post', '2.0', [
+$customer = $api->apiRequest('customers', 'post', [
     'first_name' => 'John',
     'last_name' => 'Doe',
     'email' => 'john@example.com',
 ]);
 
 // Update a product
-$api->apiRequest('products/abc-123-uuid', 'put', '2.0', [
+$api->apiRequest('products/abc-123-uuid', 'put', [
     'name' => 'Updated Product Name',
 ]);
 
@@ -50,29 +52,76 @@ $api->apiRequest('products/abc-123-uuid', 'put', '2.0', [
 $api->apiRequest('products/abc-123-uuid', 'delete');
 ```
 
-## API Versions
+## API Versioning (Date-Based)
 
-The library supports all Lightspeed X-Series API versions:
+As of January 2026, Lightspeed uses date-based API versioning instead of semantic versioning.
 
-| Constant | Version | Path | Notes |
-|----------|---------|------|-------|
-| `VERSION_09` | 0.9 | `/api` | Legacy (deprecated) |
-| `VERSION_20` | 2.0 | `/api/2.0` | Stable (default) |
-| `VERSION_20_BETA` | 2.0b | `/api/2.0` | Beta features for 2.0 |
-| `VERSION_21` | 2.1 | `/api/2.1` | Extended features |
-| `VERSION_30` | 3.0 | `/api/3.0` | Latest stable |
-| `VERSION_30_BETA` | 3.0b | `/api/3.0` | Latest beta |
+### Version Format
+
+Versions are identified by their release date in `YYYY-MM` format:
+- `2026-01` (January 2026)
+- `2026-04` (April 2026)
+- etc.
+
+Each version includes the **full set of APIs** - you no longer need to manage different versions for different endpoints. Your application can reference a single version string to access all capabilities.
+
+### Release Schedule
+
+Lightspeed publishes a new API release every **3 months** (quarterly). Each version is supported for a minimum of **12 months**.
+
+### Setting the Default Version
+
+Set the API version once at application startup:
 
 ```php
 use LightspeedXSeries\LightspeedAPI;
 
-// Using version constants
-$api->apiRequest('products', 'get', LightspeedAPI::VERSION_20);
-$api->apiRequest('fulfillments', 'get', LightspeedAPI::VERSION_30_BETA);
+// Set the default version for your entire application
+// Do this once at application bootstrap/initialization
+LightspeedAPI::setDefaultVersion('2026-01');
 
-// Or using string values
-$api->apiRequest('products', 'get', '2.0');
-$api->apiRequest('fulfillments', 'get', '3.0b');
+// All subsequent API instances will use this version
+$api = new LightspeedAPI($url, 'Bearer', $token);
+$products = $api->apiRequest('products', 'get');  // Uses 2026-01
+```
+
+### Version Configuration Options
+
+```php
+use LightspeedXSeries\LightspeedAPI;
+
+// Option 1: Set global default (recommended for site-wide configuration)
+LightspeedAPI::setDefaultVersion('2026-01');
+
+// Option 2: Set version per instance via constructor
+$api = new LightspeedAPI($url, 'Bearer', $token, '2026-04');
+
+// Option 3: Set version on existing instance
+$api = new LightspeedAPI($url, 'Bearer', $token);
+$api->setVersion('2026-04');
+
+// Option 4: Override version for a single request
+$api->apiRequest('products', 'get', null, '2026-04');
+
+// Check current versions
+echo LightspeedAPI::getDefaultVersion();  // Global default
+echo $api->getVersion();                  // Instance version (or default if not set)
+```
+
+### Upgrading Your Application
+
+When Lightspeed releases a new API version:
+
+1. Review the [API Changelog](https://x-series-api.lightspeedhq.com/changelog) for breaking changes
+2. Test your application against the new version
+3. Update your default version in one place:
+
+```php
+// Before (using 2026-01)
+LightspeedAPI::setDefaultVersion('2026-01');
+
+// After (upgrading to 2026-04)
+LightspeedAPI::setDefaultVersion('2026-04');
 ```
 
 ## The apiRequest Method
@@ -81,10 +130,10 @@ All API calls use the single `apiRequest()` method:
 
 ```php
 $api->apiRequest(
-    string $endpoint,   // The endpoint path (e.g., 'products', 'customers/123')
-    string $method,     // HTTP method: 'get', 'post', 'put', 'delete'
-    string $version,    // API version (default: '2.0')
-    ?array $data        // Request body (POST/PUT) or query params (GET)
+    string $endpoint,       // The endpoint path (e.g., 'products', 'customers/123')
+    string $method,         // HTTP method: 'get', 'post', 'put', 'delete'
+    ?array $data = null,    // Request body (POST/PUT) or query params (GET)
+    ?string $version = null // Version override (YYYY-MM format, optional)
 ): object
 ```
 
@@ -92,13 +141,13 @@ $api->apiRequest(
 
 ```php
 // With pagination
-$products = $api->apiRequest('products', 'get', '2.0', [
+$products = $api->apiRequest('products', 'get', [
     'page_size' => 100,
     'after' => 'cursor-value',
 ]);
 
 // With filters
-$customers = $api->apiRequest('customers', 'get', '2.0', [
+$customers = $api->apiRequest('customers', 'get', [
     'email' => 'john@example.com',
 ]);
 ```
@@ -106,7 +155,7 @@ $customers = $api->apiRequest('customers', 'get', '2.0', [
 ### POST Requests
 
 ```php
-$customer = $api->apiRequest('customers', 'post', '2.0', [
+$customer = $api->apiRequest('customers', 'post', [
     'first_name' => 'John',
     'last_name' => 'Doe',
     'email' => 'john@example.com',
@@ -116,7 +165,7 @@ $customer = $api->apiRequest('customers', 'post', '2.0', [
 ### PUT Requests
 
 ```php
-$api->apiRequest('customers/abc-123', 'put', '2.0', [
+$api->apiRequest('customers/abc-123', 'put', [
     'phone' => '+1234567890',
 ]);
 ```
@@ -198,24 +247,24 @@ All endpoints use the `apiRequest()` method. Replace `{id}` with the actual UUID
 | GET | `products/{id}/inventory` | Get product inventory |
 | POST | `products/{id}/images` | Upload product image |
 | GET | `products/{id}/price_books` | Get product price books |
-| POST | `products/{id}/variants` | Create variant (2.1) |
+| POST | `products/{id}/variants` | Create variant |
 
 ```php
 // List products with pagination
-$products = $api->apiRequest('products', 'get', '2.0', ['page_size' => 100]);
+$products = $api->apiRequest('products', 'get', ['page_size' => 100]);
 
 // Get single product
 $product = $api->apiRequest('products/abc-123', 'get');
 
 // Create product
-$product = $api->apiRequest('products', 'post', '2.0', [
+$product = $api->apiRequest('products', 'post', [
     'name' => 'New Product',
     'sku' => 'SKU001',
     'retail_price' => 99.99,
 ]);
 
-// Update product (use 2.1 for common fields)
-$api->apiRequest('products/abc-123', 'put', '2.1', [
+// Update product
+$api->apiRequest('products/abc-123', 'put', [
     'common' => [
         'name' => 'Updated Name',
         'description' => 'New description',
@@ -226,7 +275,7 @@ $api->apiRequest('products/abc-123', 'put', '2.1', [
 $api->apiRequest('products/abc-123', 'delete');
 
 // Upload image
-$api->apiRequest('products/abc-123/images', 'post', '2.0', [
+$api->apiRequest('products/abc-123/images', 'post', [
     'url' => 'https://example.com/image.jpg',
 ]);
 ```
@@ -241,7 +290,7 @@ $api->apiRequest('products/abc-123/images', 'post', '2.0', [
 
 ```php
 // Set image position
-$api->apiRequest('product_images/abc-123', 'put', '2.0', ['position' => 1]);
+$api->apiRequest('product_images/abc-123', 'put', ['position' => 1]);
 
 // Delete image
 $api->apiRequest('product_images/abc-123', 'delete');
@@ -276,12 +325,12 @@ $api->apiRequest('product_images/abc-123', 'delete');
 
 ```php
 // Search by email
-$customers = $api->apiRequest('customers', 'get', '2.0', [
+$customers = $api->apiRequest('customers', 'get', [
     'email' => 'john@example.com',
 ]);
 
 // Create customer
-$customer = $api->apiRequest('customers', 'post', '2.0', [
+$customer = $api->apiRequest('customers', 'post', [
     'first_name' => 'John',
     'last_name' => 'Doe',
     'email' => 'john@example.com',
@@ -289,7 +338,7 @@ $customer = $api->apiRequest('customers', 'post', '2.0', [
 ]);
 
 // Update customer
-$api->apiRequest('customers/abc-123', 'put', '2.0', [
+$api->apiRequest('customers/abc-123', 'put', [
     'phone' => '+0987654321',
 ]);
 ```
@@ -309,7 +358,7 @@ $api->apiRequest('customers/abc-123', 'put', '2.0', [
 
 ```php
 // Add customers to group
-$api->apiRequest('customer_groups/abc-123/customers', 'post', '2.0', [
+$api->apiRequest('customer_groups/abc-123/customers', 'post', [
     'customer_ids' => ['cust-1', 'cust-2', 'cust-3'],
 ]);
 ```
@@ -346,7 +395,7 @@ $api->apiRequest('customer_groups/abc-123/customers', 'post', '2.0', [
 
 ```php
 // Bulk update categories
-$api->apiRequest('product_categories/bulk', 'post', '2.0', [
+$api->apiRequest('product_categories/bulk', 'post', [
     'categories' => [
         ['id' => 'cat-1', 'name' => 'Updated Name 1'],
         ['id' => 'cat-2', 'name' => 'Updated Name 2'],
@@ -363,7 +412,7 @@ $api->apiRequest('product_categories/bulk', 'post', '2.0', [
 
 ```php
 // Create inventory adjustment
-$api->apiRequest('inventory', 'post', '2.0', [
+$api->apiRequest('inventory', 'post', [
     'product_id' => 'prod-123',
     'outlet_id' => 'outlet-456',
     'adjustment' => 10,
@@ -443,7 +492,7 @@ $api->apiRequest('inventory', 'post', '2.0', [
 
 ```php
 // Get sales with filters
-$sales = $api->apiRequest('sales', 'get', '2.0', [
+$sales = $api->apiRequest('sales', 'get', [
     'status' => 'CLOSED',
     'page_size' => 50,
 ]);
@@ -457,16 +506,16 @@ $sales = $api->apiRequest('sales', 'get', '2.0', [
 | GET | `fulfillments/{id}` | Get single fulfillment |
 | PUT | `fulfillments/{id}` | Update fulfillment |
 | POST | `fulfillments/fulfill` | Fulfill a sale (complete all) |
-| POST | `fulfillments/{id}/fulfill` | Fulfill specific line items (2.0b) |
+| POST | `fulfillments/{id}/fulfill` | Fulfill specific line items |
 
 ```php
 // Fulfill entire sale
-$api->apiRequest('fulfillments/fulfill', 'post', '2.0', [
+$api->apiRequest('fulfillments/fulfill', 'post', [
     'sale_id' => 'sale-123',
 ]);
 
 // Update fulfillment status
-$api->apiRequest('fulfillments/abc-123', 'put', '2.0', [
+$api->apiRequest('fulfillments/abc-123', 'put', [
     'status' => 'SHIPPED',
     'tracking_number' => 'TRACK123',
 ]);
@@ -552,8 +601,8 @@ $api->apiRequest('fulfillments/abc-123', 'put', '2.0', [
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `gift_cards` | List all gift cards |
-| GET | `gift_cards/{number}` | Get gift card by number (2.0) |
-| GET | `gift_cards/{id}` | Get gift card by ID (3.0) |
+| GET | `gift_cards/{number}` | Get gift card by number |
+| GET | `gift_cards/{id}` | Get gift card by ID |
 | POST | `gift_cards` | Create and activate gift card |
 | DELETE | `gift_cards/{number}` | Void gift card |
 | GET | `gift_cards/{number}/transactions` | Get gift card transactions |
@@ -561,20 +610,20 @@ $api->apiRequest('fulfillments/abc-123', 'put', '2.0', [
 
 ```php
 // Create gift card
-$api->apiRequest('gift_cards', 'post', '2.0', [
+$api->apiRequest('gift_cards', 'post', [
     'number' => '1234567890',
     'initial_balance' => 100.00,
 ]);
 
 // Redeem gift card
-$api->apiRequest('gift_cards/1234567890/transactions', 'post', '2.0', [
+$api->apiRequest('gift_cards/1234567890/transactions', 'post', [
     'type' => 'REDEEMING',
     'amount' => -25.00,  // Negative for redemption
     'client_id' => 'unique-transaction-id',
 ]);
 
 // Reload gift card
-$api->apiRequest('gift_cards/1234567890/transactions', 'post', '2.0', [
+$api->apiRequest('gift_cards/1234567890/transactions', 'post', [
     'type' => 'RELOADING',
     'amount' => 50.00,  // Positive for reload
 ]);
@@ -598,7 +647,7 @@ $api->apiRequest('gift_cards/1234567890/transactions', 'post', '2.0', [
 
 ```php
 // Create webhook
-$api->apiRequest('webhooks', 'post', '2.0', [
+$api->apiRequest('webhooks', 'post', [
     'url' => 'https://yoursite.com/webhook',
     'type' => 'sale.update',
 ]);
@@ -617,7 +666,7 @@ $api->apiRequest('webhooks', 'post', '2.0', [
 | POST | `search` | Search products or entities |
 
 ```php
-$results = $api->apiRequest('search', 'post', '2.0', [
+$results = $api->apiRequest('search', 'post', [
     'query' => 'blue shirt',
     'type' => 'products',
 ]);
@@ -770,3 +819,4 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 - [Lightspeed X-Series API Documentation](https://x-series-api.lightspeedhq.com/)
 - [API Changelog](https://x-series-api.lightspeedhq.com/changelog)
+- [API Versioning Strategy](https://x-series-api.lightspeedhq.com/docs/versioning-strategy)

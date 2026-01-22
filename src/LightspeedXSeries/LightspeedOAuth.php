@@ -14,8 +14,7 @@
 
 namespace LightspeedXSeries;
 
-class LightspeedOAuth
-{
+class LightspeedOAuth {
     private string $clientId;
     private string $clientSecret;
     private string $domainPrefix;
@@ -46,16 +45,14 @@ class LightspeedOAuth
     /**
      * Get the base URL for OAuth endpoints
      */
-    private function getBaseUrl(): string
-    {
+    private function getBaseUrl(): string {
         return 'https://' . $this->domainPrefix . '.retail.lightspeed.app';
     }
 
     /**
      * Generate a random state string for CSRF protection
      */
-    public function generateState(): string
-    {
+    public function generateState(): string {
         return bin2hex(random_bytes(16));
     }
 
@@ -65,8 +62,7 @@ class LightspeedOAuth
      * @param string|null $state CSRF state (will generate if not provided)
      * @return array ['url' => string, 'state' => string]
      */
-    public function getAuthorizationUrl(?string $state = null): array
-    {
+    public function getAuthorizationUrl(?string $state = null): array {
         $state = $state ?? $this->generateState();
 
         $params = [
@@ -96,8 +92,7 @@ class LightspeedOAuth
      * @return array Token response ['access_token', 'refresh_token', 'expires_in', etc.]
      * @throws Exception
      */
-    public function exchangeCodeForToken(string $code): array
-    {
+    public function exchangeCodeForToken(string $code): array {
         $url = $this->getBaseUrl() . '/api/1.0/token';
 
         $data = [
@@ -118,8 +113,7 @@ class LightspeedOAuth
      * @return array New token response ['access_token', 'refresh_token', 'expires_in', etc.]
      * @throws Exception
      */
-    public function refreshToken(string $refreshToken): array
-    {
+    public function refreshToken(string $refreshToken): array {
         $url = $this->getBaseUrl() . '/api/1.0/token';
 
         $data = [
@@ -140,8 +134,7 @@ class LightspeedOAuth
      * @return array Token response
      * @throws Exception
      */
-    private function makeTokenRequest(string $url, array $data): array
-    {
+    private function makeTokenRequest(string $url, array $data): array {
         $ch = curl_init();
 
         curl_setopt_array($ch, [
@@ -185,8 +178,7 @@ class LightspeedOAuth
      *
      * @param array $scopes Array of scope strings
      */
-    public function setScopes(array $scopes): self
-    {
+    public function setScopes(array $scopes): self {
         $this->scopes = $scopes;
         return $this;
     }
@@ -194,8 +186,7 @@ class LightspeedOAuth
     /**
      * Get currently configured scopes
      */
-    public function getScopes(): array
-    {
+    public function getScopes(): array {
         return $this->scopes;
     }
 }

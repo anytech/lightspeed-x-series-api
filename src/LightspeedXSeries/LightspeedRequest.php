@@ -14,8 +14,7 @@
 
 namespace LightspeedXSeries;
 
-class LightspeedRequest
-{
+class LightspeedRequest {
     private \CurlHandle|false $curl;
     private bool $debug = false;
     private string $url;
@@ -30,8 +29,7 @@ class LightspeedRequest
      * @param string $tokenType Token type (usually 'Bearer')
      * @param string $accessToken Access token for authentication
      */
-    public function __construct(string $url, string $tokenType, string $accessToken)
-    {
+    public function __construct(string $url, string $tokenType, string $accessToken) {
         $this->curl = curl_init();
         $this->url = rtrim($url, '/');
 
@@ -50,8 +48,7 @@ class LightspeedRequest
         $this->setOpt($options);
     }
 
-    public function __destruct()
-    {
+    public function __destruct() {
         if ($this->curl instanceof \CurlHandle) {
             curl_close($this->curl);
         }
@@ -63,8 +60,7 @@ class LightspeedRequest
      * @param string|int|array $name Option name or array of options
      * @param mixed $value Option value (if $name is not an array)
      */
-    public function setOpt(string|int|array $name, mixed $value = false): void
-    {
+    public function setOpt(string|int|array $name, mixed $value = false): void {
         if (is_array($name)) {
             curl_setopt_array($this->curl, $name);
             return;
@@ -86,8 +82,7 @@ class LightspeedRequest
      * @param string $rawdata JSON data to send
      * @return string Response body
      */
-    public function post(string $path, string $rawdata): string
-    {
+    public function post(string $path, string $rawdata): string {
         $this->setOpt([
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $rawdata,
@@ -105,8 +100,7 @@ class LightspeedRequest
      * @param string $rawdata JSON data to send
      * @return string Response body
      */
-    public function put(string $path, string $rawdata): string
-    {
+    public function put(string $path, string $rawdata): string {
         $this->setOpt([
             CURLOPT_POSTFIELDS => $rawdata,
             CURLOPT_CUSTOMREQUEST => 'PUT',
@@ -122,8 +116,7 @@ class LightspeedRequest
      * @param string $path API path
      * @return string Response body
      */
-    public function delete(string $path): string
-    {
+    public function delete(string $path): string {
         $this->setOpt([
             CURLOPT_HTTPGET => false,
             CURLOPT_POSTFIELDS => null,
@@ -140,8 +133,7 @@ class LightspeedRequest
      * @param string $path API path
      * @return string Response body
      */
-    public function get(string $path): string
-    {
+    public function get(string $path): string {
         $this->setOpt([
             CURLOPT_HTTPGET => true,
             CURLOPT_POSTFIELDS => null,
@@ -158,8 +150,7 @@ class LightspeedRequest
      * @param string $path API path
      * @return string Response body
      */
-    private function request(string $path): string
-    {
+    private function request(string $path): string {
         $this->setOpt(CURLOPT_URL, $this->url . $path);
 
         $response = curl_exec($this->curl);
