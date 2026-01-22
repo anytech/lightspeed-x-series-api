@@ -1,3 +1,9 @@
+![Build Status](https://github.com/anytech/lightspeed-x-series-api/actions/workflows/tests.yml/badge.svg)
+![License](https://img.shields.io/github/license/anytech/lightspeed-x-series-api)
+![PHP Version](https://img.shields.io/packagist/php-v/anytech/lightspeed-x-series-api)
+![Latest Version](https://img.shields.io/packagist/v/anytech/lightspeed-x-series-api)
+![Downloads](https://img.shields.io/packagist/dt/anytech/lightspeed-x-series-api)
+
 # Lightspeed X-Series API Client for PHP
 
 A PHP client for the Lightspeed X-Series (formerly Vend) API with built-in OAuth2 support.
