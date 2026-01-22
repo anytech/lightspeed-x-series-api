@@ -267,7 +267,12 @@ class LightspeedAPI
      */
     public function legacyRequest(string $endpoint, string $method, string $legacyVersion, ?array $data = null): object
     {
-        $path = '/api/' . $legacyVersion . '/' . ltrim($endpoint, '/');
+        // 0.9 endpoints don't use version in URL path
+        if ($legacyVersion === '0.9') {
+            $path = '/api/' . ltrim($endpoint, '/');
+        } else {
+            $path = '/api/' . $legacyVersion . '/' . ltrim($endpoint, '/');
+        }
         $method = strtolower($method);
 
         if ($method === 'get' && !empty($data)) {
