@@ -251,6 +251,84 @@ class LightspeedAPI
     }
 
     /**
+     * Make a request to a legacy Lightspeed API endpoint (0.9, 2.0, 2.1, etc.)
+     *
+     * Use this for endpoints that haven't been migrated to date-based versioning yet,
+     * such as register_sales which is still only available on 0.9.
+     *
+     * @param string $endpoint The endpoint path (e.g., 'register_sales', 'products/123')
+     * @param string $method HTTP method: 'get', 'post', 'put', 'delete'
+     * @param string $legacyVersion Legacy version string (e.g., '0.9', '2.0', '2.1')
+     * @param array|null $data Request body data for POST/PUT, or query params for GET
+     * @return object API response
+     *
+     * @example $api->legacyRequest('register_sales', 'post', '0.9', $saleData);
+     * @example $api->legacyRequest('products', 'get', '2.0', ['page_size' => 100]);
+     */
+    public function legacyRequest(string $endpoint, string $method, string $legacyVersion, ?array $data = null): object
+    {
+        $path = '/api/' . $legacyVersion . '/' . ltrim($endpoint, '/');
+        $method = strtolower($method);
+
+        if ($method === 'get' && !empty($data)) {
+            $path .= $this->buildQueryString($data);
+            $data = null;
+        }
+
+        $rawResult = match ($method) {
+            'get' => $this->request->get($path),
+            'post' => $this->request->post($path, json_encode($data)),
+            'put' => $this->request->put($path, json_encode($data)),
+            'delete' => $this->request->delete($path),
+            default => throw new Exception("Invalid HTTP method: {$method}. Use: get, post, put, delete"),
+        };
+
+        $result = json_decode($rawResult);
+
+        if ($result === null) {
+            throw new Exception('Received null result from API');
+        }
+
+        if ($this->request->httpCode === 429) {
+            $retryAfter = isset($result->{'retry-after'}) ? strtotime($result->{'retry-after'}) : time() + 60;
+
+            if ($retryAfter < time()) {
+                if ($this->allowTimeSlip) {
+                    sleep(60);
+                } else {
+                    throw new Exception('Rate limit hit and retry-after is in the past. Check system time or set allowTimeSlip = true');
+                }
+            }
+
+            if ($this->debug) {
+                echo "Rate limit hit. Sleeping until " . date('r', $retryAfter) . "\n";
+            }
+
+            while (time() < $retryAfter) {
+                sleep(1);
+            }
+
+            return $this->legacyRequest($endpoint, $method, $legacyVersion, $data);
+        }
+
+        if ($this->request->httpCode >= 400) {
+            $error = $result->error ?? 'Unknown error';
+            throw new Exception('HTTP ' . $this->request->httpCode . ': ' . $error . ' - ' . $rawResult);
+        }
+
+        if (isset($result->error)) {
+            throw new Exception($result->error . (isset($result->details) ? ': ' . $result->details : ''));
+        }
+
+        if ($this->debug) {
+            $this->lastResultRaw = $rawResult;
+            $this->lastResult = $result;
+        }
+
+        return $result;
+    }
+
+    /**
      * Get the HTTP status code from the last request
      */
     public function getLastHttpCode(): int
