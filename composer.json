@@ -33,5 +33,10 @@
             "LightspeedXSeries\\": "src/LightspeedXSeries"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "LightspeedXSeries\\Tests\\": "tests"
+        }
+    },
     "minimum-stability": "stable"
 }
