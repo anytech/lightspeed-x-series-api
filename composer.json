@@ -2,7 +2,15 @@
     "name": "anytech/lightspeed-x-series-api",
     "type": "library",
     "description": "Lightspeed X-Series (formerly Vend) API client for PHP with built-in OAuth2 support",
-    "keywords": ["lightspeed", "vend", "pos", "retail", "e-commerce", "api", "oauth2"],
+    "keywords": [
+        "lightspeed",
+        "vend",
+        "pos",
+        "retail",
+        "e-commerce",
+        "api",
+        "oauth2"
+    ],
     "homepage": "https://github.com/anytech/lightspeed-x-series-api",
     "license": "MIT",
     "authors": [
@@ -16,6 +24,9 @@
         "php": "^8.0",
         "ext-curl": "*",
         "ext-json": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
     },
     "autoload": {
         "psr-4": {
