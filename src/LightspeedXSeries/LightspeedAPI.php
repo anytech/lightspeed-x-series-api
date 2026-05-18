@@ -181,7 +181,7 @@ class LightspeedAPI
      * @example $api->apiRequest('customers', 'post', ['name' => 'John']);
      * @example $api->apiRequest('fulfillments', 'get', null, '2026-04');
      */
-    public function apiRequest(string $endpoint, string $method, ?array $data = null, ?string $version = null): object
+    public function apiRequest(string $endpoint, string $method, ?array $data = null, ?string $version = null): object|array
     {
         if ($version !== null) {
             $this->validateVersion($version);
@@ -212,7 +212,9 @@ class LightspeedAPI
 
         // Handle rate limiting (HTTP 429)
         if ($this->request->httpCode === 429) {
-            $retryAfter = isset($result->{'retry-after'}) ? strtotime($result->{'retry-after'}) : time() + 60;
+            $retryAfter = is_object($result) && isset($result->{'retry-after'})
+                ? strtotime($result->{'retry-after'})
+                : time() + 60;
 
             if ($retryAfter < time()) {
                 if ($this->allowTimeSlip) {
@@ -234,11 +236,11 @@ class LightspeedAPI
         }
 
         if ($this->request->httpCode >= 400) {
-            $error = $result->error ?? 'Unknown error';
+            $error = is_object($result) ? ($result->error ?? 'Unknown error') : 'Unknown error';
             throw new Exception('HTTP ' . $this->request->httpCode . ': ' . $error . ' - ' . $rawResult);
         }
 
-        if (isset($result->error)) {
+        if (is_object($result) && isset($result->error)) {
             throw new Exception($result->error . (isset($result->details) ? ': ' . $result->details : ''));
         }
 
@@ -265,7 +267,7 @@ class LightspeedAPI
      * @example $api->legacyRequest('register_sales', 'post', '0.9', $saleData);
      * @example $api->legacyRequest('products', 'get', '2.0', ['page_size' => 100]);
      */
-    public function legacyRequest(string $endpoint, string $method, string $legacyVersion, ?array $data = null): object
+    public function legacyRequest(string $endpoint, string $method, string $legacyVersion, ?array $data = null): object|array
     {
         // 0.9 endpoints don't use version in URL path
         if ($legacyVersion === '0.9') {
@@ -295,7 +297,9 @@ class LightspeedAPI
         }
 
         if ($this->request->httpCode === 429) {
-            $retryAfter = isset($result->{'retry-after'}) ? strtotime($result->{'retry-after'}) : time() + 60;
+            $retryAfter = is_object($result) && isset($result->{'retry-after'})
+                ? strtotime($result->{'retry-after'})
+                : time() + 60;
 
             if ($retryAfter < time()) {
                 if ($this->allowTimeSlip) {
@@ -317,11 +321,11 @@ class LightspeedAPI
         }
 
         if ($this->request->httpCode >= 400) {
-            $error = $result->error ?? 'Unknown error';
+            $error = is_object($result) ? ($result->error ?? 'Unknown error') : 'Unknown error';
             throw new Exception('HTTP ' . $this->request->httpCode . ': ' . $error . ' - ' . $rawResult);
         }
 
-        if (isset($result->error)) {
+        if (is_object($result) && isset($result->error)) {
             throw new Exception($result->error . (isset($result->details) ? ': ' . $result->details : ''));
         }
 
