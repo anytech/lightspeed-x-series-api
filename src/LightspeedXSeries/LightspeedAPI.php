@@ -204,6 +204,11 @@ class LightspeedAPI
             default => throw new Exception("Invalid HTTP method: {$method}. Use: get, post, put, delete"),
         };
 
+        // 204 No Content: success with no body (e.g. DELETE). No JSON to decode.
+        if ($this->request->httpCode === 204) {
+            return [];
+        }
+
         $result = json_decode($rawResult);
 
         if ($result === null) {
@@ -289,6 +294,11 @@ class LightspeedAPI
             'delete' => $this->request->delete($path),
             default => throw new Exception("Invalid HTTP method: {$method}. Use: get, post, put, delete"),
         };
+
+        // 204 No Content: success with no body (e.g. DELETE). No JSON to decode.
+        if ($this->request->httpCode === 204) {
+            return [];
+        }
 
         $result = json_decode($rawResult);
 

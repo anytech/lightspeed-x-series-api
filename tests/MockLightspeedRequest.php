@@ -10,6 +10,7 @@ class MockLightspeedRequest extends LightspeedRequest
     public string $lastMethod = '';
     public ?string $lastData = null;
     public string $mockResponse = '{}';
+    public int $mockHttpCode = 200;
 
     public function __construct(string $url, string $tokenType, string $accessToken)
     {
@@ -30,6 +31,7 @@ class MockLightspeedRequest extends LightspeedRequest
     {
         $this->lastPath = $path;
         $this->lastMethod = 'get';
+        $this->httpCode = $this->mockHttpCode;
         return $this->mockResponse;
     }
 
@@ -38,6 +40,7 @@ class MockLightspeedRequest extends LightspeedRequest
         $this->lastPath = $path;
         $this->lastMethod = 'post';
         $this->lastData = $rawdata;
+        $this->httpCode = $this->mockHttpCode;
         return $this->mockResponse;
     }
 
@@ -46,6 +49,7 @@ class MockLightspeedRequest extends LightspeedRequest
         $this->lastPath = $path;
         $this->lastMethod = 'put';
         $this->lastData = $rawdata;
+        $this->httpCode = $this->mockHttpCode;
         return $this->mockResponse;
     }
 
@@ -53,6 +57,7 @@ class MockLightspeedRequest extends LightspeedRequest
     {
         $this->lastPath = $path;
         $this->lastMethod = 'delete';
+        $this->httpCode = $this->mockHttpCode;
         return $this->mockResponse;
     }
 }

@@ -210,6 +210,75 @@ class LightspeedAPITest extends TestCase
         $api->apiRequest('products', 'patch');
     }
 
+    public function testApiRequestTreats204EmptyBodyAsSuccess(): void
+    {
+        $api = $this->createApi('2026-04');
+
+        $reflection = new \ReflectionClass($api);
+        $requestProperty = $reflection->getProperty('request');
+        $requestProperty->setAccessible(true);
+        $mockRequest = $requestProperty->getValue($api);
+
+        $mockRequest->mockHttpCode = 204;
+        $mockRequest->mockResponse = '';
+
+        $result = $api->apiRequest('customers/abc-123', 'delete');
+
+        $this->assertEquals('delete', $mockRequest->lastMethod);
+        $this->assertEquals([], $result);
+    }
+
+    public function testApiRequestTreats204NoContentTextBodyAsSuccess(): void
+    {
+        $api = $this->createApi('2026-04');
+
+        $reflection = new \ReflectionClass($api);
+        $requestProperty = $reflection->getProperty('request');
+        $requestProperty->setAccessible(true);
+        $mockRequest = $requestProperty->getValue($api);
+
+        $mockRequest->mockHttpCode = 204;
+        $mockRequest->mockResponse = 'No Content';
+
+        $result = $api->apiRequest('customers/abc-123', 'delete');
+
+        $this->assertEquals([], $result);
+    }
+
+    public function testApiRequestStillThrowsOn404WithErrorBody(): void
+    {
+        $api = $this->createApi('2026-04');
+
+        $reflection = new \ReflectionClass($api);
+        $requestProperty = $reflection->getProperty('request');
+        $requestProperty->setAccessible(true);
+        $mockRequest = $requestProperty->getValue($api);
+
+        $mockRequest->mockHttpCode = 404;
+        $mockRequest->mockResponse = '{"error": "Could not find entity by id"}';
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('HTTP 404');
+        $api->apiRequest('customers/abc-123', 'delete');
+    }
+
+    public function testLegacyRequestTreats204AsSuccess(): void
+    {
+        $api = $this->createApi('2026-01');
+
+        $reflection = new \ReflectionClass($api);
+        $requestProperty = $reflection->getProperty('request');
+        $requestProperty->setAccessible(true);
+        $mockRequest = $requestProperty->getValue($api);
+
+        $mockRequest->mockHttpCode = 204;
+        $mockRequest->mockResponse = '';
+
+        $result = $api->legacyRequest('customers/abc-123', 'delete', '2.0');
+
+        $this->assertEquals([], $result);
+    }
+
     public function testLegacyRequestWithVersion09(): void
     {
         $api = $this->createApi('2026-01');
