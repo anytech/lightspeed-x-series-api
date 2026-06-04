@@ -212,6 +212,10 @@ class LightspeedAPI
         $result = json_decode($rawResult);
 
         if ($result === null) {
+            // A 2xx response with an empty or null body is a successful no-content write, not an error.
+            if ($this->request->httpCode >= 200 && $this->request->httpCode < 300) {
+                return [];
+            }
             throw new Exception('Received null result from API');
         }
 
@@ -303,6 +307,10 @@ class LightspeedAPI
         $result = json_decode($rawResult);
 
         if ($result === null) {
+            // A 2xx response with an empty or null body is a successful no-content write, not an error.
+            if ($this->request->httpCode >= 200 && $this->request->httpCode < 300) {
+                return [];
+            }
             throw new Exception('Received null result from API');
         }
 

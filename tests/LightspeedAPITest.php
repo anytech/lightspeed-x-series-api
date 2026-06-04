@@ -245,6 +245,75 @@ class LightspeedAPITest extends TestCase
         $this->assertEquals([], $result);
     }
 
+    public function testApiRequestTreats200EmptyBodyAsSuccess(): void
+    {
+        $api = $this->createApi('2026-04');
+
+        $reflection = new \ReflectionClass($api);
+        $requestProperty = $reflection->getProperty('request');
+        $requestProperty->setAccessible(true);
+        $mockRequest = $requestProperty->getValue($api);
+
+        $mockRequest->mockHttpCode = 200;
+        $mockRequest->mockResponse = '';
+
+        $result = $api->apiRequest('customer_groups/abc-123/customers', 'post', ['customer_ids' => ['x']]);
+
+        $this->assertEquals('post', $mockRequest->lastMethod);
+        $this->assertEquals([], $result);
+    }
+
+    public function testApiRequestTreats200NullLiteralBodyAsSuccess(): void
+    {
+        $api = $this->createApi('2026-04');
+
+        $reflection = new \ReflectionClass($api);
+        $requestProperty = $reflection->getProperty('request');
+        $requestProperty->setAccessible(true);
+        $mockRequest = $requestProperty->getValue($api);
+
+        $mockRequest->mockHttpCode = 200;
+        $mockRequest->mockResponse = 'null';
+
+        $result = $api->apiRequest('customer_groups/abc-123/customers', 'post', ['customer_ids' => ['x']]);
+
+        $this->assertEquals([], $result);
+    }
+
+    public function testApiRequestStillThrowsNullResultOnServerErrorWithEmptyBody(): void
+    {
+        $api = $this->createApi('2026-04');
+
+        $reflection = new \ReflectionClass($api);
+        $requestProperty = $reflection->getProperty('request');
+        $requestProperty->setAccessible(true);
+        $mockRequest = $requestProperty->getValue($api);
+
+        $mockRequest->mockHttpCode = 503;
+        $mockRequest->mockResponse = '';
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Received null result from API');
+        $api->apiRequest('products', 'get');
+    }
+
+    public function testLegacyRequestTreats200EmptyBodyAsSuccess(): void
+    {
+        $api = $this->createApi('2026-01');
+
+        $reflection = new \ReflectionClass($api);
+        $requestProperty = $reflection->getProperty('request');
+        $requestProperty->setAccessible(true);
+        $mockRequest = $requestProperty->getValue($api);
+
+        $mockRequest->mockHttpCode = 200;
+        $mockRequest->mockResponse = '';
+
+        $result = $api->legacyRequest('customers/abc-123/groups', 'post', '2.0', ['id' => 'x']);
+
+        $this->assertEquals([], $result);
+    }
+
     public function testApiRequestStillThrowsOn404WithErrorBody(): void
     {
         $api = $this->createApi('2026-04');
