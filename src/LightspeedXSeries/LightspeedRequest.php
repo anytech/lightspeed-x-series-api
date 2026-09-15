@@ -48,12 +48,6 @@ class LightspeedRequest {
         $this->setOpt($options);
     }
 
-    public function __destruct() {
-        if ($this->curl instanceof \CurlHandle) {
-            curl_close($this->curl);
-        }
-    }
-
     /**
      * Set cURL option(s)
      *
