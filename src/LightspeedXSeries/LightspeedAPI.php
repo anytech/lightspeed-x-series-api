@@ -216,7 +216,7 @@ class LightspeedAPI
             if ($this->request->httpCode >= 200 && $this->request->httpCode < 300) {
                 return [];
             }
-            throw new Exception('Received null result from API');
+            throw new Exception($this->nullResultMessage());
         }
 
         // Handle rate limiting (HTTP 429)
@@ -311,7 +311,7 @@ class LightspeedAPI
             if ($this->request->httpCode >= 200 && $this->request->httpCode < 300) {
                 return [];
             }
-            throw new Exception('Received null result from API');
+            throw new Exception($this->nullResultMessage());
         }
 
         if ($this->request->httpCode === 429) {
@@ -353,6 +353,15 @@ class LightspeedAPI
         }
 
         return $result;
+    }
+
+    private function nullResultMessage(): string
+    {
+        $detail = 'HTTP ' . $this->request->httpCode;
+        if ($this->request->curlErrno) {
+            $detail .= ', cURL error ' . $this->request->curlErrno . ': ' . $this->request->curlError;
+        }
+        return 'Received null result from API (' . $detail . ')';
     }
 
     /**

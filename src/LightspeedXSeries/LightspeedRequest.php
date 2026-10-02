@@ -23,6 +23,8 @@ class LightspeedRequest {
     private string $posted = '';
 
     public int $httpCode = 0;
+    public int $curlErrno = 0;
+    public string $curlError = '';
 
     /**
      * @param string $url Base URL for the API
@@ -151,6 +153,8 @@ class LightspeedRequest {
         $curlStatus = curl_getinfo($this->curl);
 
         $this->httpCode = $curlStatus['http_code'];
+        $this->curlErrno = curl_errno($this->curl);
+        $this->curlError = curl_error($this->curl);
         $headerSize = $curlStatus['header_size'];
 
         $this->httpHeader = substr($response, 0, $headerSize);
